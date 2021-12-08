@@ -3,8 +3,10 @@
 # My changes:
 #       line 90: returning decoded token -> return encoded token
 #       line 104: database created after tables are 
+#       line 17-20 moved sqlalchemy information into config.py
 import os
 import time
+from flask_cors import CORS, cross_origin
 from flask import Flask, abort, request, jsonify, g, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
@@ -17,9 +19,12 @@ from config import SECRET_KEY, SQLALCHEMY_DATABASE_URI, SQLALCHEMY_COMMIT_ON_TEA
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = SQLALCHEMY_COMMIT_ON_TEARDOWN
-
+app.config['CORS_HEADERS'] = 'Content-Type'
 db=SQLAlchemy(app)
 auth= HTTPBasicAuth()
+# cross origin 
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -61,6 +66,7 @@ def verify_password(username_or_token, password):
 
 
 @app.route('/api/users', methods=['POST'])
+@cross_origin()
 def new_user():
     username = request.json.get('username')
     password = request.json.get('password')
