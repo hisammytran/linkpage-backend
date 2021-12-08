@@ -1,3 +1,8 @@
+#Author: Original template from miguelgrinberg 
+# repo:  https://github.com/miguelgrinberg/REST-auth
+# My changes:
+#       line 90: returning decoded token -> return encoded token
+#       line 104: database created after tables are 
 import os
 import time
 from flask import Flask, abort, request, jsonify, g, url_for
@@ -7,6 +12,7 @@ import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+
 from config import SECRET_KEY, SQLALCHEMY_DATABASE_URI, SQLALCHEMY_COMMIT_ON_TEARDOWN
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
@@ -94,6 +100,5 @@ if not os.path.exists('db.sqlite'):
         db.create_all()
 
 
-if __name__ == '__main__':
-    
+if __name__ == '__main__': 
     app.run(debug=True)
