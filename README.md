@@ -3,7 +3,8 @@
 This API will serve a react page.
 
 ## Instructions
-
+### Requirements
+Python
 ### Run a development server
 
 #### Create a virtual environment
