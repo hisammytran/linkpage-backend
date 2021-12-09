@@ -1,9 +1,6 @@
 #Author: Original template from miguelgrinberg 
 # repo:  https://github.com/miguelgrinberg/REST-auth
-# My changes:
-#       line 90: returning decoded token -> return encoded token
-#       line 104: database created after tables are 
-#       line 17-20 moved sqlalchemy information into config.py
+# Description: serves react app 
 import os
 import time
 from flask_cors import CORS, cross_origin
@@ -19,11 +16,15 @@ from config import SECRET_KEY, SQLALCHEMY_DATABASE_URI, SQLALCHEMY_COMMIT_ON_TEA
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = SQLALCHEMY_COMMIT_ON_TEARDOWN
-app.config['CORS_HEADERS'] = 'Content-Type'
+
 db=SQLAlchemy(app)
 auth= HTTPBasicAuth()
 # cross origin 
-cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+# cors = CORS(app, resources={r"/api/*": {"origins": "*"}}, support_credentials=True)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['CORS_ORIGINS'] = ["http://localhost:3000"]
+
 
 
 class User(db.Model):
@@ -65,9 +66,12 @@ def verify_password(username_or_token, password):
     return True
 
 
-@app.route('/api/users', methods=['POST'])
-@cross_origin()
+@app.route('/api/users', methods=['POST','OPTIONS'])
+@cross_origin(origins=['http://localhost:3000'])
 def new_user():
+    if request.method == 'OPTIONS':
+        return 200
+    
     username = request.json.get('username')
     password = request.json.get('password')
     if username is None or password is None:
@@ -80,6 +84,7 @@ def new_user():
     db.session.commit()
     return (jsonify({'username': user.username}), 201, 
             {'Location': url_for('get_user', id=user.id, _external=True)})
+
 
 
 @app.route('/api/users/<int:id>')
@@ -97,10 +102,14 @@ def get_auth_token():
     return jsonify({'token': token, 'duration': 600})
 
 
-@app.route('/api/resource')
+@app.route('/api/resource',methods=['OPTIONS','GET'])
+@cross_origin(origins=['http://localhost:3000'])
 @auth.login_required
 def get_resource():
-    return jsonify({'data': 'Hello, %s!' % g.user.username})
+    if request.method == 'OPTIONS':
+        return 200
+    else: 
+        return jsonify({'data': 'Hello, %s!' % g.user.username})
 
 if not os.path.exists('db.sqlite'):
         db.create_all()
