@@ -27,22 +27,17 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['CORS_ORIGINS'] = ["http://localhost:3000"]
 
-#model for posts many to one with user
-class Posts(db.Model):
-    __tablename__ = 'posts'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32))
-    parent_id = Column(Integer, ForeignKey('parent.id'))
-    parent = relationship("User",back_populates="User")
+
 
 
 # model for users one to many with posts
 class User(db.Model):
-    __tablename__ = 'users'
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(32), index=True)
+    username = db.Column(db.String(32), index=True, nullable=False)
     password_hash = db.Column(db.String(128))
-    children = relationship("Posts",back_populates="Posts")
+    # post_id = db.Column(db.Integer,db.ForeignKey('posts.id'), nullable=False)
+    # posts = db.relationship('Posts',backref='users')
     def hash_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -62,6 +57,14 @@ class User(db.Model):
         except:
             return
         return User.query.get(data['id'])
+
+#model for posts many to one with user
+class Posts(db.Model):
+    __tablename__ = "posts"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship("User",backref="posts")
 
 @auth.verify_password
 def verify_password(username_or_token, password):
@@ -126,7 +129,10 @@ def get_resource():
 
 if not os.path.exists('db.sqlite'):
         db.create_all()
+        db.session.commit()
 
+# db.session.add(User(Posts()))
 
 if __name__ == '__main__': 
     app.run(debug=True)
+    
