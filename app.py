@@ -6,6 +6,8 @@ import time
 from flask_cors import CORS, cross_origin
 from flask import Flask, abort, request, jsonify, g, url_for
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Table, Column, Integer, ForeignKey
+from sqlalchemy.orm import relationship
 from flask_httpauth import HTTPBasicAuth
 import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,14 +27,22 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['CORS_ORIGINS'] = ["http://localhost:3000"]
 
+#model for posts many to one with user
+class Posts(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32))
+    parent_id = Column(Integer, ForeignKey('parent.id'))
+    parent = relationship("User",back_populates="User")
 
 
+# model for users one to many with posts
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
-
+    children = relationship("Posts",back_populates="Posts")
     def hash_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -95,9 +105,12 @@ def get_user(id):
     return jsonify({'username': user.username})
 
 
-@app.route('/api/token')
+@app.route('/api/token', methods=['OPTIONS','GET'])
+@cross_origin(origins=['http://localhost:3000'])
 @auth.login_required
 def get_auth_token():
+    if request.method== 'OPTIONS':
+        return 200
     token = g.user.generate_auth_token(600)
     return jsonify({'token': token, 'duration': 600})
 
