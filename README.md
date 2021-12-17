@@ -28,6 +28,8 @@ venv/bin/activate is the path to the script that starts the venv
 
 
 # TODO
-create a table for links
-send jwt as httponly cookie
-maybe? refresh and access token
+
+send jwt as httponly cookie<br>
+maybe refresh and access token<br>
+write query to get all posts from a user <br>
+write endpoints for creating a post for a user <br>

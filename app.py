@@ -37,7 +37,7 @@ class User(db.Model):
     username = db.Column(db.String(32), index=True, nullable=False)
     password_hash = db.Column(db.String(128))
     # post_id = db.Column(db.Integer,db.ForeignKey('posts.id'), nullable=False)
-    # posts = db.relationship('Posts',backref='users')
+    posts = db.relationship('Posts',backref='users')
     def hash_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -64,7 +64,7 @@ class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship("User",backref="posts")
+    # user = db.relationship("User",backref="posts")
 
 @auth.verify_password
 def verify_password(username_or_token, password):
@@ -98,7 +98,12 @@ def new_user():
     return (jsonify({'username': user.username}), 201, 
             {'Location': url_for('get_user', id=user.id, _external=True)})
 
-
+@app.route('api/users/post')
+@cross_origin(origins=['http://localhost:3000'])
+def newPost():
+    if request.method == 'OPTIONS':
+        return 200
+      
 
 @app.route('/api/users/<int:id>')
 def get_user(id):
