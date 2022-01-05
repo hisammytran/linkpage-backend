@@ -62,7 +62,8 @@ class User(db.Model):
 class Posts(db.Model):
     __tablename__ = "posts"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32))
+    linkName = db.Column(db.String(32))
+    url = db.Column()
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     # user = db.relationship("User",backref="posts")
 
@@ -98,11 +99,27 @@ def new_user():
     return (jsonify({'username': user.username}), 201, 
             {'Location': url_for('get_user', id=user.id, _external=True)})
 
-@app.route('api/users/post')
+@app.route('/api/users/post', methods=['POST','OPTIONS'])
+@auth.login_required
 @cross_origin(origins=['http://localhost:3000'])
 def newPost():
     if request.method == 'OPTIONS':
         return 200
+    url = request.json.get('URL')
+    linkName= request.json.get('linkName')
+    if url is None or linkName is None:
+        abort(400)
+    user = g.user.id
+    post = Posts(user_id=user)
+    post.linkName=linkName
+    post.url=url
+    db.session.add(post)
+    db.session.commit()
+    return 200
+
+    
+    
+    
       
 
 @app.route('/api/users/<int:id>')
